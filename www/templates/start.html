@@ -1,0 +1,30 @@
+<ion-view view-title="RumahPintar v2">
+  <ion-content>
+		<div style="text-align:center" ng-show="spinner">
+			<img src="img/spinner.gif" style="margin-top:50%;">
+		</div>
+		<div style="text-align:center" ng-show="isLoggedIn && !spinner">
+			<img style="width:100%;padding:20px" src="img/rumahpintar.png">
+		</div>
+    <form ng-submit="doLogin()" ng-hide="isLoggedIn || spinner">
+			<div style="text-align:center">
+				<br>
+				<img style="width:30%;" src="img/rumahpintar.png">
+				<br>
+			</div>
+      <div class="list">
+        <label class="item item-input">
+          <span class="input-label">Username</span>
+          <input type="text" ng-model="loginData.username">
+        </label>
+        <label class="item item-input">
+          <span class="input-label">Password</span>
+          <input type="password" ng-model="loginData.password">
+        </label>
+        <label class="item">
+          <button class="button button-block button-positive" type="submit">Log in</button>
+        </label>
+      </div>
+    </form>
+  </ion-content>
+</ion-view>

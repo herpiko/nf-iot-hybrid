@@ -1,0 +1,13 @@
+<ion-view view-title="Kamera" ng-controller="CameraCtrl">
+  <ion-content>
+		<div style="text-align:center">
+			<img src="img/spinner.gif" style="margin-top:50%;" ng-show="spinner">
+		</div>
+		<img style="width:100%;margin-top:50px" data-ng-src="{{image}}" ng-hide="spinner">
+  </ion-content>
+</ion-view>
+<ion-footer-bar class="bar-balanced" ng-controller="CameraCtrl">
+  <div class="buttons" ng-click="camera()">
+		<h1 class="title">Ambil Gambar</h1>
+  </div>
+</ion-footer-bar>
