@@ -44,6 +44,7 @@ angular.module('starter.controllers', [])
       console.log(data);
       if (!data.success) {
         console.log("Login failed");
+        // If fail, pop a message 
 	      var myPopup = $ionicPopup.show({
          template: "Nama pengguna atau kata sandi salah",
          title: 'Gagal Login',
@@ -60,33 +61,39 @@ angular.module('starter.controllers', [])
        });
 				$rootScope.isLoggedIn = false;
       } else if (data.key) {
+        // If success, save auth key to localStorage
         localStorage.setItem("key", data.key);
 				$rootScope.isLoggedIn = true;
 				$scope.spinner = false;
 			}
     })
-
-    // Simulate a login delay. Remove this and replace with your login
-    // code if using a login system
-    /* $timeout(function() { */
-    /*   $scope.closeLogin(); */
-    /* }, 1000); */
   };
 
-  $rootScope.theft = false;
+
+  // Initiate socket connection
   $rootScope.socket = io("http://128.199.95.141:2999");
   
+  // This socket event is to answer middleware (server) question, "whoare"
+  // The mobile app answer "join-ng" that represents as an angular client instance
+  // This is required to splitted socket communication between raspberry pi and mobile apps
   $rootScope.socket.on("whoareu", function(){
     console.log("middleware asking whoareu");
     $rootScope.socket.emit("join-ng");
   })
 
+  // theft value should be false when initialized
+  $rootScope.theft = false;
+
+  // Wait for period event from raspi
   $rootScope.socket.on("message", function(data){
 		$rootScope.dht11 = {
 			temp : data.temp,
 			humid : data.humid
 		}
   	$scope.$apply();
+
+    // If the raspberry pi send true value in theft key, pop the alarm message
+    // Bip bip bip!
 		if (!$rootScope.theft && data.theft) {
 	    var myPopup = $ionicPopup.show({
        template: "Alarm pencurian menyala!",
@@ -103,11 +110,15 @@ angular.module('starter.controllers', [])
        ]
   	  })
 		}
+    // Set the value to global
     $rootScope.theft = data.theft;
   })
-
+  
+  // Logout function, this will redirect view to login page.
 	$rootScope.logout = function(){
 		$rootScope.isLoggedIn = false;
+    // Remove auth key from local storage
+		localStorage.removeItem("key");
   	$scope.$apply();
 	}
 
@@ -116,6 +127,14 @@ angular.module('starter.controllers', [])
 	$rootScope.isLoggedIn = false;
 })
 .controller('MapCtrl', function($rootScope, $scope, $ionicModal, $timeout, $http, $state, $ionicPopup) {
+
+  // This controller should not be accessed if the user is not logged in
+	if (!$rootScope.isLoggedIn) {
+		$state.go("app.start");
+		localStorage.removeItem("key");
+	}
+
+  // Initialized marker in map
   $scope.markers = {
     mainMarker : {
       lat: -6.352812176498355,
@@ -123,6 +142,9 @@ angular.module('starter.controllers', [])
       focus: true,
     }
   };
+
+  // Update current marker position
+  // Disabled since the webservice API is not implemented yet. 
   angular.extend($scope, {
     center: {
       lat: -6.352812176498355,
@@ -138,11 +160,15 @@ angular.module('starter.controllers', [])
   })
 })
 .controller('LampCtrl', function($rootScope, $scope, $ionicModal, $timeout, $http, $state, $ionicPopup) {
+  
+  // This controller should not be accessed if the user is not logged in
 	if (!$rootScope.isLoggedIn) {
 		$state.go("app.start");
 		localStorage.removeItem("key");
 	}
 	
+
+  // Function to switch LED1 state
   $scope.led1 = function(value){
 		value = (value) ? 1 : 2;
     $http({
@@ -156,6 +182,8 @@ angular.module('starter.controllers', [])
       console.log(data);
     })
   }
+  
+  // Function to switch LED2 state
   $scope.led2 = function(value){
 		value = (value) ? 1 : 2;
     $http({
@@ -175,6 +203,8 @@ angular.module('starter.controllers', [])
 .controller('CameraCtrl', function($rootScope, $scope, $ionicModal, $timeout, $http, $state, $ionicPopup) {
 	$scope.spinner = false;
   $scope.$apply();
+
+  // Get camera image from raspberry pi
   $scope.camera = function(){
 		console.log("CAMERA");
 		$scope.spinner = true;
@@ -185,14 +215,19 @@ angular.module('starter.controllers', [])
     })
     .success(function(data, status){
       console.log(data);
+
+      // The camera image is encoded in base64 string. add prefix
 			$scope.image = "data:image/png;base64," + data;
     })
     .error(function(data, status){
       console.log(data);
     })
   }
+
+  // Wait for image event from socket
   $rootScope.socket.on("image", function(data){
     console.log(data);
+    // The camera image is encoded in base64 string. add prefix
     $scope.image = "data:image/png;base64," + data;
 		$scope.spinner = false;
   	$scope.$apply();
